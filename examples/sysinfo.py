@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import sys
 import subprocess
+import sys
 from time import sleep
-import pifacecad
 
+import pifacecad
 
 UPDATE_INTERVAL = 60 * 5  # 5 mins
 GET_IP_CMD = "hostname --all-ip-addresses"
@@ -11,15 +11,13 @@ GET_TEMP_CMD = "/usr/bin/vcgencmd measure_temp"
 TOTAL_MEM_CMD = "free | grep 'Mem' | awk '{print $2}'"
 USED_MEM_CMD = "free | grep 'Mem' | awk '{print $3}'"
 
-temperature_symbol = pifacecad.LCDBitmap(
-    [0x4, 0x4, 0x4, 0x4, 0xe, 0xe, 0xe, 0x0])
-memory_symbol = pifacecad.LCDBitmap(
-    [0xe, 0x1f, 0xe, 0x1f, 0xe, 0x1f, 0xe, 0x0])
+temperature_symbol = pifacecad.LCDBitmap([0x4, 0x4, 0x4, 0x4, 0xE, 0xE, 0xE, 0x0])
+memory_symbol = pifacecad.LCDBitmap([0xE, 0x1F, 0xE, 0x1F, 0xE, 0x1F, 0xE, 0x0])
 temp_symbol_index, memory_symbol_index = 0, 1
 
 
 def run_cmd(cmd):
-    return subprocess.check_output(cmd, shell=True).decode('utf-8')
+    return subprocess.check_output(cmd, shell=True).decode("utf-8")
 
 
 def get_my_ip():
