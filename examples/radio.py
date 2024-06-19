@@ -23,34 +23,42 @@ from pifacecad.lcd import LCD_WIDTH
 UPDATE_INTERVAL = 1
 
 STATIONS = [
-    {'name': "6 Music",
-     'source': 'http://www.bbc.co.uk/radio/listen/live/r6_aaclca.pls',
-     'info': 'http://www.bbc.co.uk/radio/player/bbc_6music'},
-    {'name': "Radio 2",
-     'source': 'http://www.bbc.co.uk/radio/listen/live/r2_aaclca.pls',
-     'info': None},
-    {'name': "Radio 4",
-     'source': 'http://www.bbc.co.uk/radio/listen/live/r4_aaclca.pls',
-     'info': None},
-    {'name': "5 Live",
-     'source': 'http://www.bbc.co.uk/radio/listen/live/r5l_aaclca.pls',
-     'info': None},
-    {'name': "Radio 4 Extra",
-     'source': 'http://www.bbc.co.uk/radio/listen/live/r4x_aaclca.pls',
-     'info': None},
-    {'name': "Planet Rock",
-     'source': 'http://tx.sharp-stream.com/icecast.php?i=planetrock.mp3',
-     'info': None},
+    {
+        "name": "6 Music",
+        "source": "http://www.bbc.co.uk/radio/listen/live/r6_aaclca.pls",
+        "info": "http://www.bbc.co.uk/radio/player/bbc_6music",
+    },
+    {
+        "name": "Radio 2",
+        "source": "http://www.bbc.co.uk/radio/listen/live/r2_aaclca.pls",
+        "info": None,
+    },
+    {
+        "name": "Radio 4",
+        "source": "http://www.bbc.co.uk/radio/listen/live/r4_aaclca.pls",
+        "info": None,
+    },
+    {
+        "name": "5 Live",
+        "source": "http://www.bbc.co.uk/radio/listen/live/r5l_aaclca.pls",
+        "info": None,
+    },
+    {
+        "name": "Radio 4 Extra",
+        "source": "http://www.bbc.co.uk/radio/listen/live/r4x_aaclca.pls",
+        "info": None,
+    },
+    {
+        "name": "Planet Rock",
+        "source": "http://tx.sharp-stream.com/icecast.php?i=planetrock.mp3",
+        "info": None,
+    },
 ]
 
-PLAY_SYMBOL = pifacecad.LCDBitmap(
-    [0x10, 0x18, 0x1c, 0x1e, 0x1c, 0x18, 0x10, 0x0])
-PAUSE_SYMBOL = pifacecad.LCDBitmap(
-    [0x0, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x0, 0x0])
-INFO_SYMBOL = pifacecad.LCDBitmap(
-    [0x6, 0x6, 0x0, 0x1e, 0xe, 0xe, 0xe, 0x1f])
-MUSIC_SYMBOL = pifacecad.LCDBitmap(
-    [0x2, 0x3, 0x2, 0x2, 0xe, 0x1e, 0xc, 0x0])
+PLAY_SYMBOL = pifacecad.LCDBitmap([0x10, 0x18, 0x1C, 0x1E, 0x1C, 0x18, 0x10, 0x0])
+PAUSE_SYMBOL = pifacecad.LCDBitmap([0x0, 0x1B, 0x1B, 0x1B, 0x1B, 0x1B, 0x0, 0x0])
+INFO_SYMBOL = pifacecad.LCDBitmap([0x6, 0x6, 0x0, 0x1E, 0xE, 0xE, 0xE, 0x1F])
+MUSIC_SYMBOL = pifacecad.LCDBitmap([0x2, 0x3, 0x2, 0x2, 0xE, 0x1E, 0xC, 0x0])
 
 PLAY_SYMBOL_INDEX = 0
 PAUSE_SYMBOL_INDEX = 1
@@ -99,20 +107,23 @@ class Radio(object):
 
     def play(self):
         """Plays the current radio station."""
-        print("Playing {}.".format(self.current_station['name']))
+        print("Playing {}.".format(self.current_station["name"]))
         # check if is m3u and send -playlist switch to mplayer
-        if self.current_station['source'].split("?")[0][-3:] in ['m3u', 'pls']:
+        if self.current_station["source"].split("?")[0][-3:] in ["m3u", "pls"]:
             play_command = "mplayer -quiet -playlist {stationsource}".format(
-		        stationsource=self.current_station['source'])        			
+                stationsource=self.current_station["source"]
+            )
         else:
             play_command = "mplayer -quiet {stationsource}".format(
-                stationsource=self.current_station['source'])        
+                stationsource=self.current_station["source"]
+            )
         self.playing_process = subprocess.Popen(
             play_command,
-            #stdout=subprocess.PIPE,
-            #stderr=subprocess.PIPE,
+            # stdout=subprocess.PIPE,
+            # stderr=subprocess.PIPE,
             shell=True,
-            preexec_fn=os.setsid)
+            preexec_fn=os.setsid,
+        )
         self._is_playing = True
         self.update_display()
 
@@ -145,8 +156,8 @@ class Radio(object):
 
     def update_playing(self):
         """Updated the playing status."""
-        #message = self.text_status.ljust(LCD_WIDTH-1)
-        #self.cad.lcd.write(message)
+        # message = self.text_status.ljust(LCD_WIDTH-1)
+        # self.cad.lcd.write(message)
         if self.playing:
             char_index = PLAY_SYMBOL_INDEX
         else:
@@ -157,7 +168,7 @@ class Radio(object):
 
     def update_station(self):
         """Updates the station status."""
-        message = self.current_station['name'].ljust(LCD_WIDTH-1)
+        message = self.current_station["name"].ljust(LCD_WIDTH - 1)
         self.cad.lcd.set_cursor(1, 0)
         self.cad.lcd.write(message)
 
@@ -186,12 +197,12 @@ def radio_preset_ir(event):
 if __name__ == "__main__":
     # test for mpalyer
     try:
-        subprocess.call(["mplayer"], stdout=open('/dev/null'))
+        subprocess.call(["mplayer"], stdout=open("/dev/null"))
     except OSError as e:
         if e.errno == os.errno.ENOENT:
             print(
-                "MPlayer was not found, install with "
-                "`sudo apt-get install mplayer`")
+                "MPlayer was not found, install with " "`sudo apt-get install mplayer`"
+            )
             sys.exit(1)
         else:
             raise  # Something else went wrong while trying to run `mplayer`
@@ -209,8 +220,7 @@ if __name__ == "__main__":
     # wait for button presses
     switchlistener = pifacecad.SwitchEventListener(chip=cad)
     for pstation in range(4):
-        switchlistener.register(
-            pstation, pifacecad.IODIR_ON, radio_preset_switch)
+        switchlistener.register(pstation, pifacecad.IODIR_ON, radio_preset_switch)
     switchlistener.register(4, pifacecad.IODIR_ON, end_barrier.wait)
     switchlistener.register(5, pifacecad.IODIR_ON, radio.toggle_playing)
     switchlistener.register(6, pifacecad.IODIR_ON, radio.previous_station)
@@ -218,7 +228,8 @@ if __name__ == "__main__":
 
     irlistener = pifacecad.IREventListener(
         prog="pifacecad-radio-example",
-        lircrc="/usr/share/doc/python3-pifacecad/examples/radiolircrc")
+        lircrc="/usr/share/doc/python3-pifacecad/examples/radiolircrc",
+    )
     for i in range(4):
         irlistener.register(str(i), radio_preset_ir)
 

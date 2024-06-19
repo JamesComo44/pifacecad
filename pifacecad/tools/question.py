@@ -34,6 +34,7 @@ class LCDQuestion(object):
     :param cad: An already initialised PiFaceCAD object.
     :type cad: PiFaceCAD
     """
+
     def __init__(self, question, answers, selector=">", cad=None):
         self.question = question
         self.answers = answers
@@ -65,9 +66,7 @@ class LCDQuestion(object):
         listener = pifacecad.SwitchEventListener(self.cad)
         listener.register(7, pifacecad.IODIR_ON, self.next_answer)
         listener.register(6, pifacecad.IODIR_ON, self.previous_answer)
-        listener.register(5,
-                          pifacecad.IODIR_ON,
-                          self.select_answer_switch_pressed)
+        listener.register(5, pifacecad.IODIR_ON, self.select_answer_switch_pressed)
 
         self.wait_for_return_string = threading.Barrier(2)
         listener.activate()
@@ -88,8 +87,7 @@ class LCDQuestion(object):
 
     def change_answer(self, new_answer_index=None):
         if new_answer_index is None:
-            new_answer_index = \
-                (self._displayed_answer_index + 1) % len(self.answers)
+            new_answer_index = (self._displayed_answer_index + 1) % len(self.answers)
 
         # pad with spaces to overwrite previous answer (ljust)
         prev_ans = self.answers[self._displayed_answer_index]

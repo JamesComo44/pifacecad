@@ -7,12 +7,14 @@ import pifacecommon.interrupts
 
 class IREvent(object):
     """An IR event."""
+
     def __init__(self, ir_code):
         self.ir_code = ir_code
 
 
 class IRFunctionMap(pifacecommon.interrupts.FunctionMap):
     """Maps an IR code to callback function."""
+
     def __init__(self, ir_code, callback):
         self.ir_code = ir_code
         super(IRFunctionMap, self).__init__(callback)
@@ -38,13 +40,17 @@ class IREventListener(object):
         self.ir_function_maps = list()
         self.event_queue = multiprocessing.SimpleQueue()
         self.detector = multiprocessing.Process(
-            target=watch_ir_events, args=(self.event_queue,))
+            target=watch_ir_events, args=(self.event_queue,)
+        )
         self.dispatcher = threading.Thread(
-            target=pifacecommon.interrupts.handle_events, args=(
+            target=pifacecommon.interrupts.handle_events,
+            args=(
                 self.ir_function_maps,
                 self.event_queue,
                 _event_matches_ir_function_map,
-                IREventListener.TERMINATE_SIGNAL))
+                IREventListener.TERMINATE_SIGNAL,
+            ),
+        )
 
     def register(self, ir_code, callback):
         """Registers an ir_code to a callback function.

@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 import threading
+
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 import pifacecommon
@@ -35,13 +36,13 @@ SWITCH_RANGE = 8
 # @unittest.skip
 class TestPiFaceCADSwitches(unittest.TestCase):
     """General use tests (not really in the spirit of unittesting)."""
+
     def setUp(self):
         self.cad = pifacecad.PiFaceCAD()
 
     def test_switches(self):
         for a, b in ((0, 7), (1, 6), (2, 5), (3, 4)):
-            input(
-                "Hold switch {a} and {b}, then press enter.".format(a=a, b=b))
+            input("Hold switch {a} and {b}, then press enter.".format(a=a, b=b))
             self.assertEqual(self.cad.switches[a].value, 1)
             self.assertEqual(self.cad.switches[a].value, 1)
 
@@ -75,7 +76,7 @@ class TestInterrupts(unittest.TestCase):
 
     def interrupts_test_helper(self, event):
         self.assertEqual(event.interrupt_flag, 0x1)
-        self.assertEqual(event.interrupt_capture, 0xfe)
+        self.assertEqual(event.interrupt_capture, 0xFE)
         self.assertEqual(event.pin_num, 0)
         self.assertEqual(event.direction, self.direction)
         self.test_passed = True
@@ -90,9 +91,9 @@ class TestIR(unittest.TestCase):
     def setUp(self):
         self.barrier = threading.Barrier(2, timeout=5)
         self.listener = pifacecad.IREventListener(
-            prog="pifacecadtest",
-            lircrc="./tests/testlircrc")
-        self.listener.register('1', self.ir_test_helper)
+            prog="pifacecadtest", lircrc="./tests/testlircrc"
+        )
+        self.listener.register("1", self.ir_test_helper)
         self.test_passed = False
 
     def test_interrupt(self):
@@ -102,7 +103,7 @@ class TestIR(unittest.TestCase):
         self.assertTrue(self.test_passed)
 
     def ir_test_helper(self, event):
-        self.assertEqual(event.ir_code, '1')
+        self.assertEqual(event.ir_code, "1")
         self.test_passed = True
         self.barrier.wait()
 
@@ -139,8 +140,7 @@ class TestLCD(unittest.TestCase):
 
     def test_set_cursor(self):
         self.cad.lcd.set_cursor(15, 1)
-        self.assertTrue(
-            yes_no_question("Is the cursor at the bottom right corner?"))
+        self.assertTrue(yes_no_question("Is the cursor at the bottom right corner?"))
         self.cad.lcd.home()
 
 

@@ -77,11 +77,11 @@ class HD44780DataPort(pifacecommon.mcp23s17.MCP23S17RegisterNibble):
         - value
 
     """
+
     def __init__(self, chip):
         super(HD44780DataPort, self).__init__(
-            pifacecommon.mcp23s17.LOWER_NIBBLE,
-            pifacecommon.mcp23s17.GPIOB,
-            chip)
+            pifacecommon.mcp23s17.LOWER_NIBBLE, pifacecommon.mcp23s17.GPIOB, chip
+        )
 
 
 class HD44780ControlPort(pifacecommon.mcp23s17.MCP23S17Register):
@@ -94,9 +94,9 @@ class HD44780ControlPort(pifacecommon.mcp23s17.MCP23S17Register):
         - enable_pin
 
     """
+
     def __init__(self, chip):
-        super(HD44780ControlPort, self).__init__(
-            pifacecommon.mcp23s17.GPIOB, chip)
+        super(HD44780ControlPort, self).__init__(pifacecommon.mcp23s17.GPIOB, chip)
 
     @property
     def backlight_pin(self):
@@ -177,8 +177,8 @@ class HD44780LCD8bitModeMixIn(object):
 
 
 class HD44780LCD(object):
-    """Component part of an HD4780, must be combined with a 4 or 8 bit mixin.
-    """
+    """Component part of an HD4780, must be combined with a 4 or 8 bit mixin."""
+
     def __init__(self, control_port, data_port, init_lcd=True):
         self.control_port = control_port
         self.data_port = data_port
@@ -373,8 +373,9 @@ class HD44780LCD(object):
         :returns: (int, int) -- A tuple containing the column and row.
         """
         fixed_col = self._cursor_position[0] % LCD_RAM_WIDTH
-        fixed_row = self._cursor_position[1] + \
-            math.floor(self._cursor_position[0] / LCD_RAM_WIDTH)
+        fixed_row = self._cursor_position[1] + math.floor(
+            self._cursor_position[0] / LCD_RAM_WIDTH
+        )
 
         self._cursor_position[0] = fixed_col
         self._cursor_position[1] = fixed_row
@@ -437,7 +438,7 @@ class HD44780LCD(object):
         """
         self.set_ddram_address()
         for char in text:
-            if '\n' in char:
+            if "\n" in char:
                 self.set_cursor(0, 1)
             else:
                 self.send_data(ord(char))
@@ -472,7 +473,7 @@ class HD44780LCD(object):
         :type bitmap: :class:`LCDBitmap`
         """
         self.char_bank_in_range_or_error(char_bank)
-        self.set_cgram_address(char_bank*8)
+        self.set_cgram_address(char_bank * 8)
         for line in bitmap:
             self.send_data(line)
 
@@ -483,8 +484,7 @@ class HD44780LCD(object):
         :param char_bank: The address to check.
         :type char_bank: int
         """
-        if char_bank >= MAX_CUSTOM_BITMAPS or \
-                char_bank < 0:
+        if char_bank >= MAX_CUSTOM_BITMAPS or char_bank < 0:
             raise Exception(
                 "There are only {max} custom characters (You tried to access "
                 "{cgramaddr}).".format(
@@ -498,6 +498,7 @@ class HD44780LCD(object):
 
 class LCDBitmap(bytearray):
     """A custom bitmap for the LCD screen."""
+
     # TODO: More efficiend to store this sideways (LCDchar: 5x8, Bitmap: 8x...)
     def __init__(self, lines=list()):
         super(LCDBitmap, self).__init__(self)
@@ -507,4 +508,5 @@ class LCDBitmap(bytearray):
 
 class PiFaceLCD(HD44780LCD, HD44780LCD4bitModeMixIn):
     """An HD44780 LCD in 4-bit mode."""
+
     pass

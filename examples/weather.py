@@ -8,6 +8,7 @@ page, click on the Current Conditions XML. Thats your link! Good luck!
 """
 
 import sys
+
 PY3 = sys.version_info[0] >= 3
 if not PY3:
     print("Weather only works with `python3`.")
@@ -29,11 +30,10 @@ WEATHER_STATIONS = [
     {"location": "Paris", "id": "IILEDEFR15"},
     {"location": "New York", "id": "KNYNEWYO62"},
 ]
-URL_PREFIX = \
-    "http://api.wunderground.com/weatherstation/WXCurrentObXML.asp?ID="
+URL_PREFIX = "http://api.wunderground.com/weatherstation/WXCurrentObXML.asp?ID="
 
-TEMP_SYMBOL = pifacecad.LCDBitmap([0x4, 0x4, 0x4, 0x4, 0xe, 0xe, 0xe, 0x0])
-WIND_SYMBOL = pifacecad.LCDBitmap([0x0, 0xf, 0x3, 0x5, 0x9, 0x10, 0x0])
+TEMP_SYMBOL = pifacecad.LCDBitmap([0x4, 0x4, 0x4, 0x4, 0xE, 0xE, 0xE, 0x0])
+WIND_SYMBOL = pifacecad.LCDBitmap([0x0, 0xF, 0x3, 0x5, 0x9, 0x10, 0x0])
 TEMP_SYMBOL_INDEX, WIND_SYMBOL_INDEX = 0, 1
 
 
@@ -50,8 +50,7 @@ class WeatherStation(object):
 
     @property
     def xmltree(self):
-        """Only get xml info the first time we need it (WARNING: gets stale).
-        """
+        """Only get xml info the first time we need it (WARNING: gets stale)."""
         if self._xmltree is None:
             self.generate_xmltree()
         return self._xmltree
@@ -92,18 +91,17 @@ class WeatherDisplay(object):
     def update(self, event=None):
         self.current_station.generate_xmltree()  # before we print anything
         self.cad.lcd.clear()
-        self.cad.lcd.write("{place}\n".format(
-            place=self.stations[self.station_index].location))
+        self.cad.lcd.write(
+            "{place}\n".format(place=self.stations[self.station_index].location)
+        )
         # temperature
         self.cad.lcd.write_custom_bitmap(TEMP_SYMBOL_INDEX)
         self.cad.lcd.write(":")
-        self.cad.lcd.write("{temp}C ".format(
-            temp=self.current_station.temperature))
+        self.cad.lcd.write("{temp}C ".format(temp=self.current_station.temperature))
         # wind
         self.cad.lcd.write_custom_bitmap(WIND_SYMBOL_INDEX)
         self.cad.lcd.write(":")
-        self.cad.lcd.write("{wind}mph".format(
-            wind=self.current_station.wind_mph))
+        self.cad.lcd.write("{wind}mph".format(wind=self.current_station.wind_mph))
 
     def close(self):
         self.cad.lcd.clear()
@@ -115,8 +113,7 @@ def get_current_condition_url(weather_station_id):
 
 
 if __name__ == "__main__":
-    stations = \
-        [WeatherStation(s['location'], s['id']) for s in WEATHER_STATIONS]
+    stations = [WeatherStation(s["location"], s["id"]) for s in WEATHER_STATIONS]
 
     cad = pifacecad.PiFaceCAD()
     global weatherdisplay
@@ -132,10 +129,8 @@ if __name__ == "__main__":
     switchlistener = pifacecad.SwitchEventListener(chip=cad)
     switchlistener.register(4, pifacecad.IODIR_ON, end_barrier.wait)
     switchlistener.register(5, pifacecad.IODIR_ON, weatherdisplay.update)
-    switchlistener.register(
-        6, pifacecad.IODIR_ON, weatherdisplay.previous_station)
-    switchlistener.register(
-        7, pifacecad.IODIR_ON, weatherdisplay.next_station)
+    switchlistener.register(6, pifacecad.IODIR_ON, weatherdisplay.previous_station)
+    switchlistener.register(7, pifacecad.IODIR_ON, weatherdisplay.next_station)
 
     switchlistener.activate()
     end_barrier.wait()  # wait unitl exit

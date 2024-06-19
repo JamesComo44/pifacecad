@@ -12,8 +12,9 @@ class NoPiFaceCADDetectedError(Exception):
     pass
 
 
-class PiFaceCAD(pifacecommon.mcp23s17.MCP23S17,
-                pifacecommon.interrupts.GPIOInterruptDevice):
+class PiFaceCAD(
+    pifacecommon.mcp23s17.MCP23S17, pifacecommon.interrupts.GPIOInterruptDevice
+):
     """A PiFace Control and Display board.
 
     :attribute: switch_port -- See
@@ -32,19 +33,26 @@ class PiFaceCAD(pifacecommon.mcp23s17.MCP23S17,
     >>> cad.lcd.write("Hello, PiFaceLCD!")
     >>> cad.lcd.backlight_on()
     """
-    def __init__(self,
-                 hardware_addr=0,
-                 bus=DEFAULT_SPI_BUS,
-                 chip_select=DEFAULT_SPI_CHIP_SELECT,
-                 init_board=True):
+
+    def __init__(
+        self,
+        hardware_addr=0,
+        bus=DEFAULT_SPI_BUS,
+        chip_select=DEFAULT_SPI_CHIP_SELECT,
+        init_board=True,
+    ):
         super(PiFaceCAD, self).__init__(hardware_addr, bus, chip_select)
 
         self.switch_port = pifacecommon.mcp23s17.MCP23S17RegisterNeg(
-            pifacecommon.mcp23s17.GPIOA, self)
+            pifacecommon.mcp23s17.GPIOA, self
+        )
 
-        self.switches = [pifacecommon.mcp23s17.MCP23S17RegisterBitNeg(
-            i, pifacecommon.mcp23s17.GPIOA, self)
-            for i in range(NUM_SWITCHES)]
+        self.switches = [
+            pifacecommon.mcp23s17.MCP23S17RegisterBitNeg(
+                i, pifacecommon.mcp23s17.GPIOA, self
+            )
+            for i in range(NUM_SWITCHES)
+        ]
 
         if init_board:
             self.init_board()
@@ -52,7 +60,8 @@ class PiFaceCAD(pifacecommon.mcp23s17.MCP23S17,
         self.lcd = pifacecad.lcd.PiFaceLCD(
             control_port=pifacecad.lcd.HD44780ControlPort(self),
             data_port=pifacecad.lcd.HD44780DataPort(self),
-            init_lcd=init_board)
+            init_lcd=init_board,
+        )
 
     def enable_interrupts(self):
         self.gpintena.value = 0xFF
@@ -64,20 +73,22 @@ class PiFaceCAD(pifacecommon.mcp23s17.MCP23S17,
 
     def init_board(self):
         ioconfig = (
-            pifacecommon.mcp23s17.BANK_OFF |
-            pifacecommon.mcp23s17.INT_MIRROR_OFF |
-            pifacecommon.mcp23s17.SEQOP_ON |
-            pifacecommon.mcp23s17.DISSLW_OFF |
-            pifacecommon.mcp23s17.HAEN_ON |
-            pifacecommon.mcp23s17.ODR_OFF |
-            pifacecommon.mcp23s17.INTPOL_LOW
+            pifacecommon.mcp23s17.BANK_OFF
+            | pifacecommon.mcp23s17.INT_MIRROR_OFF
+            | pifacecommon.mcp23s17.SEQOP_ON
+            | pifacecommon.mcp23s17.DISSLW_OFF
+            | pifacecommon.mcp23s17.HAEN_ON
+            | pifacecommon.mcp23s17.ODR_OFF
+            | pifacecommon.mcp23s17.INTPOL_LOW
         )
         self.iocon.value = ioconfig
         if self.iocon.value != ioconfig:
             raise NoPiFaceCADDetectedError(
                 "No PiFace Control and Display board detected "
                 "(hardware_addr={h}, bus={b}, chip_select={c}).".format(
-                    h=self.hardware_addr, b=self.bus, c=self.chip_select))
+                    h=self.hardware_addr, b=self.bus, c=self.chip_select
+                )
+            )
         else:
             # finish configuring the board
             self.iodira.value = 0xFF  # GPIOA as inputs
@@ -98,8 +109,8 @@ class SwitchEventListener(pifacecommon.interrupts.PortEventListener):
     >>> listener.register(0, pifacecad.IODIR_ON, print_flag)
     >>> listener.activate()
     """
+
     def __init__(self, chip=None):
         if chip is None:
             chip = PiFaceCAD()
-        super(SwitchEventListener, self).__init__(
-            pifacecommon.mcp23s17.GPIOA, chip)
+        super(SwitchEventListener, self).__init__(pifacecommon.mcp23s17.GPIOA, chip)

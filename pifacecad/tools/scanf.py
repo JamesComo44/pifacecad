@@ -26,10 +26,12 @@ if not PY3:
 
 # charset from http://mil.ufl.edu/4744/docs/lcdmanual/charset.gif
 LCD_RETURN_CHAR = chr(126)  # arrow
-LCD_PUNC_CHARSET = [chr(x) for x in range(0x21, 0x30)] + \
-    [chr(x) for x in range(0x3A, 0x41)] + \
-    [chr(x) for x in range(0x5B, 0x61)] + \
-    [chr(x) for x in range(0x7B, 0xFF)]
+LCD_PUNC_CHARSET = (
+    [chr(x) for x in range(0x21, 0x30)]
+    + [chr(x) for x in range(0x3A, 0x41)]
+    + [chr(x) for x in range(0x5B, 0x61)]
+    + [chr(x) for x in range(0x7B, 0xFF)]
+)
 
 # character specifiers for LCDScanf (defined at bottom)
 # VALUE_SELECTS = {}
@@ -77,6 +79,7 @@ class LCDScanf(object):
         >>> print(scanner.scan())
         ['fish']
     """
+
     class ScanfMode(object):
         select, edit = range(2)
 
@@ -114,12 +117,11 @@ class LCDScanf(object):
         self._mode = newmode
 
     def scan(self):
-        #self.cad.lcd.clear()
+        # self.cad.lcd.clear()
         self.cad.lcd.write(str(self.display_string))
         # set the cursor to a sensible position
         try:
-            first_value_select_index = \
-                self.display_string.instanceindex(ValueSelect)
+            first_value_select_index = self.display_string.instanceindex(ValueSelect)
         except TypeError:
             # nothing to select, show the string and return
             self.cad.lcd.display_on()
@@ -158,8 +160,8 @@ class LCDScanf(object):
     def change_mode_event(self, event):
         col, row = self.cad.lcd.get_cursor()
         if isinstance(
-                self.display_string.value_at(col-self.start_offset[0]),
-                ReturnCharacter):
+            self.display_string.value_at(col - self.start_offset[0]), ReturnCharacter
+        ):
             self.return_string_event(event)
         elif self.mode == self.ScanfMode.select:
             self.mode = self.ScanfMode.edit
@@ -179,7 +181,7 @@ class LCDScanf(object):
         value_index = (value_index + 1) % len(str(self.display_string))
 
         # make sure we land on a ValueSelect
-        while (not is_selectable_character(self.display_string, value_index)):
+        while not is_selectable_character(self.display_string, value_index):
             value_index = (value_index + 1) % len(str(self.display_string))
 
         col = value_index + self.start_offset[0]
@@ -196,7 +198,7 @@ class LCDScanf(object):
         value_index = (value_index - 1) % len(str(self.display_string))
 
         # make sure we land on a ValueSelect
-        while (not is_selectable_character(self.display_string, value_index)):
+        while not is_selectable_character(self.display_string, value_index):
             value_index = (value_index - 1) % len(str(self.display_string))
 
         col = value_index + self.start_offset[0]
@@ -205,13 +207,13 @@ class LCDScanf(object):
 
     def increment_value(self):
         col, row = self.cad.lcd.get_cursor()
-        value_select = self.display_string.value_at(col-self.start_offset[0])
+        value_select = self.display_string.value_at(col - self.start_offset[0])
         value_select.increment_value()
         self.write_value(value_select, col, row)
 
     def decrement_value(self):
         col, row = self.cad.lcd.get_cursor()
-        value_select = self.display_string.value_at(col-self.start_offset[0])
+        value_select = self.display_string.value_at(col - self.start_offset[0])
         value_select.decrement_value()
         self.write_value(value_select, col, row)
 
@@ -223,6 +225,7 @@ class LCDScanf(object):
 
 class ValueSelect(list):
     """A character in a specified range"""
+
     def __init__(self, values=list(), value_index=0):
         super(ValueSelect, self).__init__(values)
         self.value_index = value_index
@@ -265,20 +268,19 @@ class ValueSelect(list):
 
 class CharacterValueSelect(ValueSelect):
     def __init__(self):
-        super(CharacterValueSelect, self).__init__(
-            [c for c in char_range("a", "z")])
+        super(CharacterValueSelect, self).__init__([c for c in char_range("a", "z")])
 
 
 class CapsCharacterValueSelect(ValueSelect):
     def __init__(self):
         super(CapsCharacterValueSelect, self).__init__(
-            [c for c in char_range("A", "Z")])
+            [c for c in char_range("A", "Z")]
+        )
 
 
 class PunctuationValueSelect(ValueSelect):
     def __init__(self):
-        super(PunctuationValueSelect, self).__init__(
-            [p for p in LCD_PUNC_CHARSET])
+        super(PunctuationValueSelect, self).__init__([p for p in LCD_PUNC_CHARSET])
 
 
 class NumericValue(object):
@@ -301,8 +303,8 @@ class IntegerValueSelect(ValueSelect, NumericValue):
 class HexadecimalValueSelect(ValueSelect, NumericValue):
     def __init__(self):
         super(HexadecimalValueSelect, self).__init__(
-            [numeric for numeric in range(10)] +
-            [alpha for alpha in char_range('A', 'F')]
+            [numeric for numeric in range(10)]
+            + [alpha for alpha in char_range("A", "F")]
         )
         self.base = 16
 
@@ -315,6 +317,7 @@ class ReturnCharacter(ValueSelect):
 
 class MultiValueSelect(list):
     """A list of ValueSelects representing a single value."""
+
     def __init__(self, multiplier, value_select, custom_values=None):
         if value_select is ValueSelect:
             x = [value_select(custom_values) for i in range(multiplier)]
@@ -344,6 +347,7 @@ class MultiValueSelect(list):
 
 class ValueSelectString(list):
     """A list of ValueSelect's and characters, representing a string."""
+
     def __init__(self, format, custom_values=None):
         super(ValueSelectString, self).__init__()
         self.format = format
@@ -357,7 +361,7 @@ class ValueSelectString(list):
                     char_spec = True
                     multiplier = 1
                 else:
-                    #multiplier = 1
+                    # multiplier = 1
                     self.append(character)
                 continue
 
@@ -369,16 +373,12 @@ class ValueSelectString(list):
             try:
                 value_select = VALUE_SELECTS[character]
             except KeyError:
-                raise UnknownSpecifierError(
-                    "'%s' is an unknown specifier." % character
-                )
+                raise UnknownSpecifierError("'%s' is an unknown specifier." % character)
             else:
                 if value_select is ReturnCharacter:
                     self.append(ReturnCharacter())
                 else:
-                    mvs = MultiValueSelect(
-                        multiplier, value_select, custom_values
-                    )
+                    mvs = MultiValueSelect(multiplier, value_select, custom_values)
                     self.values.append(mvs)
                     self.extend(mvs)
             finally:
@@ -474,20 +474,20 @@ def is_selectable_character(display_string, col):
 
     # selectable if we're at the start of a value select or returnchar
     return char_index == 0 and (
-        isinstance(display_string[vs_index], ValueSelect) or
-        isinstance(display_string[vs_index], ReturnCharacter)
+        isinstance(display_string[vs_index], ValueSelect)
+        or isinstance(display_string[vs_index], ReturnCharacter)
     )
 
 
 # defined here because we need to build classes first
 VALUE_SELECTS = {
-    'c': CharacterValueSelect,
-    'C': CapsCharacterValueSelect,
-    'i': IntegerValueSelect,
-    'd': IntegerValueSelect,
-    'x': HexadecimalValueSelect,
-    'X': HexadecimalValueSelect,
-    '.': PunctuationValueSelect,
-    'm': ValueSelect,
-    'r': ReturnCharacter,
+    "c": CharacterValueSelect,
+    "C": CapsCharacterValueSelect,
+    "i": IntegerValueSelect,
+    "d": IntegerValueSelect,
+    "x": HexadecimalValueSelect,
+    "X": HexadecimalValueSelect,
+    ".": PunctuationValueSelect,
+    "m": ValueSelect,
+    "r": ReturnCharacter,
 }

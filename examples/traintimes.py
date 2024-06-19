@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Get trains times to various destinations from your local train station."""
+
 import sys
 import re
 import itertools
@@ -22,29 +23,28 @@ UPDATE_INTERVAL = 60  # seconds
 DEFAULT_DEPARTURE_STATION = "MAN"
 
 TRAIN_STATIONS = [
-    {'name': 'Manchester Piccadilly', 'code': 'MAN'},
-    {'name': 'Manchester Oxford Road', 'code': 'MCO'},
-    {'name': 'Manchester Airport', 'code': 'MIA'},
-    {'name': 'London Euston', 'code': 'EUS'},
-    {'name': 'Wigan Wallgate', 'code': 'WGW'},
-    {'name': 'Stockport', 'code': 'SPT'},
-    {'name': 'Southport', 'code': 'SOP'},
-    {'name': 'Blackpool North', 'code': 'BPN'},
-    {'name': 'Liverpool Lime Street', 'code': 'LIV'},
-    {'name': 'Birmingham New Street', 'code': 'BHM'},
-    {'name': 'Crewe via Stockport', 'code': 'CRE'},
-    {'name': 'Crewe', 'code': 'CRE'},
-    {'name': 'Macclesfield', 'code': 'MAC'},
-    {'name': 'York', 'code': 'YRK'},
-    {'name': 'Buxton', 'code': 'BUX'},
-    {'name': 'Chester', 'code': 'CTR'},
-    {'name': 'Wilmslow', 'code': 'WML'},
-    {'name': 'Alderley Edge', 'code': 'ALD'},
+    {"name": "Manchester Piccadilly", "code": "MAN"},
+    {"name": "Manchester Oxford Road", "code": "MCO"},
+    {"name": "Manchester Airport", "code": "MIA"},
+    {"name": "London Euston", "code": "EUS"},
+    {"name": "Wigan Wallgate", "code": "WGW"},
+    {"name": "Stockport", "code": "SPT"},
+    {"name": "Southport", "code": "SOP"},
+    {"name": "Blackpool North", "code": "BPN"},
+    {"name": "Liverpool Lime Street", "code": "LIV"},
+    {"name": "Birmingham New Street", "code": "BHM"},
+    {"name": "Crewe via Stockport", "code": "CRE"},
+    {"name": "Crewe", "code": "CRE"},
+    {"name": "Macclesfield", "code": "MAC"},
+    {"name": "York", "code": "YRK"},
+    {"name": "Buxton", "code": "BUX"},
+    {"name": "Chester", "code": "CTR"},
+    {"name": "Wilmslow", "code": "WML"},
+    {"name": "Alderley Edge", "code": "ALD"},
 ]
 
 # Pattern for live departure board information
-LDB_URL = \
-    'http://ojp.nationalrail.co.uk/service/ldbboard/dep/{depart}/{arrive}/To'
+LDB_URL = "http://ojp.nationalrail.co.uk/service/ldbboard/dep/{depart}/{arrive}/To"
 
 LATER_TIMES_PAGE_SIZE = 3
 
@@ -72,26 +72,29 @@ class TrainDepartureBoard(object):
     def update_times(self):
         # thanks sean https://github.com/seanbechhofer/raspberrypi/blob/master/
         # python/trains.py
-        timeshtml = urllib.request.urlopen(LDB_URL.format(
-            depart=self.departing_station['code'],
-            arrive=self.destination_station['code'])).read()
+        timeshtml = urllib.request.urlopen(
+            LDB_URL.format(
+                depart=self.departing_station["code"],
+                arrive=self.destination_station["code"],
+            )
+        ).read()
         soup = BeautifulSoup(timeshtml)
         self._times = list()
-        for div in soup.find_all('div'):
-            if 'class' in div.attrs and "tbl-cont" in div['class']:
+        for div in soup.find_all("div"):
+            if "class" in div.attrs and "tbl-cont" in div["class"]:
                 body = div.table.tbody
-                for row in body.find_all('tr'):
-                    cells = row.find_all('td')
+                for row in body.find_all("tr"):
+                    cells = row.find_all("td")
                     time = dict()
-                    time['time'] = cells[0].contents[0].strip()
-                    #time['dest'] = cells[1].contents[0].strip()
+                    time["time"] = cells[0].contents[0].strip()
+                    # time['dest'] = cells[1].contents[0].strip()
                     # Collapse all white space
-                    #time['dest'] = re.sub(r"\s+", ' ', time['dest'])
-                    time['report'] = cells[2].contents[0].strip()
-                    if re.match('[0-9][0-9]:[0-9][0-9]', time['report']):
-                        time['estimated'] = time['report']
+                    # time['dest'] = re.sub(r"\s+", ' ', time['dest'])
+                    time["report"] = cells[2].contents[0].strip()
+                    if re.match("[0-9][0-9]:[0-9][0-9]", time["report"]):
+                        time["estimated"] = time["report"]
                     else:
-                        time['estimated'] = ""
+                        time["estimated"] = ""
                     self._times.append(time)
 
     @property
@@ -103,12 +106,14 @@ class TrainDepartureBoard(object):
         if len(self.later_times) <= LATER_TIMES_PAGE_SIZE:
             return [self.later_times]  # just one page
         else:
-            return list(itertools.zip_longest(
-                self.later_times[0::LATER_TIMES_PAGE_SIZE],
-                self.later_times[1::LATER_TIMES_PAGE_SIZE],
-                self.later_times[2::LATER_TIMES_PAGE_SIZE],
-                fillvalue={'time': '', 'report': '', 'estimated': ''}
-            ))
+            return list(
+                itertools.zip_longest(
+                    self.later_times[0::LATER_TIMES_PAGE_SIZE],
+                    self.later_times[1::LATER_TIMES_PAGE_SIZE],
+                    self.later_times[2::LATER_TIMES_PAGE_SIZE],
+                    fillvalue={"time": "", "report": "", "estimated": ""},
+                )
+            )
 
 
 class TrainDepartureBoardDisplay(object):
@@ -148,8 +153,11 @@ class TrainDepartureBoardDisplay(object):
             self.print_next_train_time()
         except NoTrainsError:
             self.cad.lcd.clear()
-            self.cad.lcd.write("No trains for\n{}".format(
-                self.current_board.destination_station['name']))
+            self.cad.lcd.write(
+                "No trains for\n{}".format(
+                    self.current_board.destination_station["name"]
+                )
+            )
         else:
             self.print_later_train_times()
 
@@ -160,13 +168,16 @@ class TrainDepartureBoardDisplay(object):
         self.timer.start()
 
     def print_loading(self):
-        self.cad.lcd.write("Loading times to\n{}".format(
-            self.current_board.destination_station['name'][:16]))
+        self.cad.lcd.write(
+            "Loading times to\n{}".format(
+                self.current_board.destination_station["name"][:16]
+            )
+        )
 
     def print_next_train_time(self):
         try:
-            next_time_string = self.current_board.times[0]['time']
-            estimated_time_string = self.current_board.times[0]['estimated']
+            next_time_string = self.current_board.times[0]["time"]
+            estimated_time_string = self.current_board.times[0]["estimated"]
         except IndexError:
             raise NoTrainsError()
 
@@ -174,20 +185,19 @@ class TrainDepartureBoardDisplay(object):
         self.cad.lcd.write(
             "{next_time} {station_code} {estimated_time}".format(
                 next_time=next_time_string,
-                station_code=self.current_board.destination_station['code'],
+                station_code=self.current_board.destination_station["code"],
                 estimated_time=estimated_time_string,
             )
         )
 
     def print_later_train_times(self):
-        later_times = \
-            self.current_board.later_times_pages[self.later_times_page]
+        later_times = self.current_board.later_times_pages[self.later_times_page]
         if len(later_times) >= 3:
             later_times_string = " ".join(
-                [t['time'].replace(":", "") for t in later_times]
+                [t["time"].replace(":", "") for t in later_times]
             )
         elif len(later_times) > 0:
-            later_times_string = " ".join([t['time'] for t in later_times])
+            later_times_string = " ".join([t["time"] for t in later_times])
         else:
             later_times_string = "No more trains."
 
@@ -208,10 +218,11 @@ class TrainDepartureBoardDisplay(object):
 
 def get_station_from_code(code):
     for station in TRAIN_STATIONS:
-        if station['code'] == code:
+        if station["code"] == code:
             return station
     else:
         raise StationError("Invalid station code", code)
+
 
 if __name__ == "__main__":
     try:
@@ -241,11 +252,10 @@ if __name__ == "__main__":
     switchlistener = pifacecad.SwitchEventListener(chip=cad)
     switchlistener.register(4, pifacecad.IODIR_ON, end_barrier.wait)
     switchlistener.register(
-        5, pifacecad.IODIR_ON, traintimedisplay.next_later_times_page)
-    switchlistener.register(
-        6, pifacecad.IODIR_ON, traintimedisplay.previous_board)
-    switchlistener.register(
-        7, pifacecad.IODIR_ON, traintimedisplay.next_board)
+        5, pifacecad.IODIR_ON, traintimedisplay.next_later_times_page
+    )
+    switchlistener.register(6, pifacecad.IODIR_ON, traintimedisplay.previous_board)
+    switchlistener.register(7, pifacecad.IODIR_ON, traintimedisplay.next_board)
 
     switchlistener.activate()
     end_barrier.wait()  # wait unitl exit

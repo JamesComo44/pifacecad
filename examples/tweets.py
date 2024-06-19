@@ -3,15 +3,18 @@
 Call with no arguments to pull latest tweets from home timeline.
 Call with string argument to search for that term
 """
+
 from time import sleep
 import threading
 import sys
 import os
+
 try:
     import twitter  # http://mike.verdone.ca/twitter/
 except ImportError:
-    print("You need to install Python Twitter Tools "
-          "(http://mike.verdone.ca/twitter/).")
+    print(
+        "You need to install Python Twitter Tools " "(http://mike.verdone.ca/twitter/)."
+    )
     sys.exit(1)
 import pifacecommon
 import pifacecad
@@ -36,9 +39,7 @@ class NoTweetsError(Exception):
 class TwitterTicker(object):
     def __init__(self, cad, oauth_token, oauth_secret, search_term=None):
         self.twitter = twitter.Twitter(
-            auth=twitter.OAuth(
-                oauth_token, oauth_secret,
-                CONSUMER_KEY, CONSUMER_SECRET)
+            auth=twitter.OAuth(oauth_token, oauth_secret, CONSUMER_KEY, CONSUMER_SECRET)
         )
         self.search_term = search_term
         self.cad = cad
@@ -58,7 +59,7 @@ class TwitterTicker(object):
 
     @page.setter
     def page(self, new_page):
-        num_pages = 1 + int(len(self.current_tweet['text']) / PAGE_WIDTH)
+        num_pages = 1 + int(len(self.current_tweet["text"]) / PAGE_WIDTH)
         new_page %= num_pages
         self.display_tweet(self.current_tweet, new_page)
 
@@ -68,11 +69,10 @@ class TwitterTicker(object):
 
         try:
             latest_tweets = self.twitter.search.tweets(
-                q=self.search_term,
-                since_id=self.current_tweet['id'])['statuses']
+                q=self.search_term, since_id=self.current_tweet["id"]
+            )["statuses"]
         except AttributeError:
-            latest_tweets = self.twitter.search.tweets(
-                q=self.search_term)['statuses']
+            latest_tweets = self.twitter.search.tweets(q=self.search_term)["statuses"]
 
         try:
             return latest_tweets[0]
@@ -87,8 +87,10 @@ class TwitterTicker(object):
         except NoTweetsError:
             return
         else:
-            if self.current_tweet is None or \
-                    latest_tweet['id'] != self.current_tweet['id']:
+            if (
+                self.current_tweet is None
+                or latest_tweet["id"] != self.current_tweet["id"]
+            ):
                 self.current_tweet = latest_tweet
                 self.display_tweet(self.current_tweet)
 
@@ -100,14 +102,16 @@ class TwitterTicker(object):
 
     def display_tweet(self, tweet, page=0):
         self._current_page = page
-        text = tweet['text']
+        text = tweet["text"]
         self.cad.lcd.clear()
         start = PAGE_WIDTH * page
         end = PAGE_WIDTH * (page + 1)
-        top_line = text[start:start+pifacecad.lcd.LCD_WIDTH].ljust(
-            pifacecad.lcd.LCD_WIDTH)
-        bottom_line = text[start+pifacecad.lcd.LCD_WIDTH:end].ljust(
-            pifacecad.lcd.LCD_WIDTH)
+        top_line = text[start : start + pifacecad.lcd.LCD_WIDTH].ljust(
+            pifacecad.lcd.LCD_WIDTH
+        )
+        bottom_line = text[start + pifacecad.lcd.LCD_WIDTH : end].ljust(
+            pifacecad.lcd.LCD_WIDTH
+        )
         self.cad.lcd.set_cursor(0, 0)
         self.cad.lcd.write(top_line)
         self.cad.lcd.set_cursor(0, 1)
@@ -135,10 +139,9 @@ if __name__ == "__main__":
     else:
         print("Searching for", search_term)
 
-    twitter_creds = os.path.expanduser('~/.twitter_piface_demo_credentials')
+    twitter_creds = os.path.expanduser("~/.twitter_piface_demo_credentials")
     if not os.path.exists(twitter_creds):
-        twitter.oauth_dance(
-            "PiFace Demo", CONSUMER_KEY, CONSUMER_SECRET, twitter_creds)
+        twitter.oauth_dance("PiFace Demo", CONSUMER_KEY, CONSUMER_SECRET, twitter_creds)
 
     oauth_token, oauth_secret = twitter.read_token_file(twitter_creds)
 
