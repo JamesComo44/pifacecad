@@ -11,20 +11,39 @@ def write(cad: PiFaceCAD, message: str):
 
 
 def write_with_backlight(cad: PiFaceCAD, message: str):
+    cad.lcd.backlight_on()
     write(cad, message)
 
 
-if __name__ == "__main__":
+def write_without_backlight(cad: PiFaceCAD, message: str):
+    cad.lcd.backlight_off()
+    write(cad, message)
+
+
+def main():
     parser = argparse.ArgumentParser(description="Write a message to the LCD screen.")
     parser.add_argument(
-        "message", 
+        "message",
         type=str,
         nargs="?",
         default="",
         help="Text to display on LCD screen. If unset, clears the LCD screen.",
     )
+    parser.add_argument(
+        "--no-backlight",
+        "-nb",
+        action="store_true",
+        help="Write the message without the backlight off. Turns it off if already on.",
+    )
 
     args = parser.parse_args()
-
     cad = PiFaceCAD()
-    write(cad, args.message)
+
+    if args.no_backlight:
+        write_without_backlight(cad, args.message)
+    else:
+        write_with_backlight(cad, args.message)
+
+
+if __name__ == "__main__":
+    main()

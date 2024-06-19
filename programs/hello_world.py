@@ -2,6 +2,7 @@
 
 import pifacecad
 
+
 def main():
     cad = pifacecad.PiFaceCAD()
 
@@ -11,6 +12,6 @@ def main():
     cad.lcd.backlight_on()
     cad.lcd.write("I'm Gay!")
 
+
 if __name__ == "__main__":
     main()
-
