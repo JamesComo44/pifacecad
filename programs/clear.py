@@ -11,13 +11,11 @@ def clear_lcd(cad: PiFaceCAD):
 
 
 def turn_off_lcd(cad: PiFaceCAD):
-    clear_lcd(cad)
-
     cad.lcd.display_off()
     cad.lcd.backlight_off()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Clear the LCD screen.")
     parser.add_argument(
         "-f",
@@ -27,10 +25,13 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
     cad = PiFaceCAD()
 
     if args.off:
         turn_off_lcd(cad)
-    else:
-        clear_lcd(cad)
+
+    clear_lcd(cad)
+
+
+if __name__ == "__main__":
+    main()
