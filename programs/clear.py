@@ -15,13 +15,28 @@ def turn_off_lcd(cad: PiFaceCAD):
     cad.lcd.backlight_off()
 
 
+def turn_on_lcd(cad: PiFaceCAD):
+    cad.lcd.display_on()
+    cad.lcd.backlight_on()
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Clear the LCD screen.")
-    parser.add_argument(
+    parser = argparse.ArgumentParser(
+        description="Clear the LCD screen. You can't set both --on and --off."
+    )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-f",
         "--off",
         action="store_true",
         help="Turns the LCD screen off after clearing it.",
+    )
+    group.add_argument(
+        "-o",
+        "--on",
+        action="store_true",
+        help="Turns the LCD screen on after clearing it.",
     )
 
     args = parser.parse_args()
@@ -29,6 +44,9 @@ def main():
 
     if args.off:
         turn_off_lcd(cad)
+
+    if args.on:
+        turn_on_lcd(cad)
 
     clear_lcd(cad)
 
