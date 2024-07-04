@@ -129,7 +129,7 @@ def current_temperature() -> str:
     return run_shell("/usr/bin/vcgencmd measure_temp | awk -F'=' '{print $2}'")
 
 
-def pihole_update_available() -> bool:
+def pihole_updates_available() -> bool:
     pattern = r"v(\d+\.\d+\.\d+)\s+\(Latest:\s+v(\d+\.\d+\.\d+)\)"
     matches = re.findall(pattern, run_shell("pihole -v"))
 
@@ -139,6 +139,35 @@ def pihole_update_available() -> bool:
             return True
 
     return False
+
+
+def dietpi_updates_available() -> bool:
+    """
+    https://github.com/Fourdee/DietPi/blob/master/dietpi/func/dietpi-banner
+    """
+    if Path("/run/dietpi/.update_available").exists():
+        return True
+
+    if Path("/run/dietpi/.live_patches").exists():
+        return True
+
+    return False
+
+
+def apt_updates_available() -> bool:
+    if Path("/run/dietpi/.apt_updates").exists():
+        return True
+
+    return False
+
+
+def any_updates_available() -> bool:
+    updates = [
+        dietpi_updates_available(),
+        pihole_updates_available(),
+        apt_updates_available()
+    ]
+    return any(updates)
 
 
 class StatusDriver:
@@ -168,6 +197,8 @@ class StatusDriver:
 
         self._backlight_on = True
         self._update_interval_min = 30
+        self._current_render_page_index = 0
+        self._auto_rotate_page = True
 
         self.stats = ""
         self.uptime = ""
@@ -179,15 +210,24 @@ class StatusDriver:
         self.update_timer = Timer(self._update_interval_min * 60, self.auto_update)
         self.update_timer.start()
 
-        self.current_render_page_index = 0
         self.render_status_ip()
 
     def choose_function(self, event=None):
         self.cancel_timers()
 
+        backlight_text = "Backlight Off" if self._backlight_on else "Backlignt On"
+        rotate_text = "Rotate Off" if self._auto_rotate_page else "Rotate On"
+        interval_text = f"Interval {self._update_interval_min}min"
+
         question = LCDQuestion(
             question="Choose Function",
-            answers=["Backlight", "Interval", "Update Software", "Nothing"],
+            answers=[
+                backlight_text,
+                interval_text,
+                rotate_text,
+                "Update Software",
+                "Nothing",
+            ],
             selector=">",
             cad=self.cad,
         )
@@ -196,13 +236,15 @@ class StatusDriver:
 
         if answer_index == 0:
             self.toggle_backlight()
-            self.auto_update()
 
         if answer_index == 1:
             self.update_interval()
             return
 
         if answer_index == 2:
+            self._auto_rotate_page = not self._auto_rotate_page
+
+        if answer_index == 3:
             self.update_software()
             return
 
@@ -211,10 +253,28 @@ class StatusDriver:
     def update_software(self, event=None):
         self.cancel_timers()
 
+        dietpi_update = dietpi_updates_available()
+        apt_update = apt_updates_available()
+        pihole_update = pihole_updates_available()
+
+        update_modules = []
+
+        if dietpi_update:
+            update_modules.append("OS")
+        if apt_update:
+            update_modules.append("APT")
+        if pihole_update:
+            update_modules.append("PI")
+
+        if update_modules:
+            update_question = "Update " + "+".join(update_modules)
+        else:
+            update_question = "No Updates"
+
         question = LCDQuestion(
-            question="Update Now?",
+            question=update_question,
             answers=["No", "Yes"],
-            selector="> ",
+            selector=">" if update_modules else "Check? >",
             cad=self.cad,
         )
 
@@ -224,7 +284,7 @@ class StatusDriver:
             self.auto_update()
             return
 
-        print("Updating Software...")
+        print(f"Updating Software {update_modules} ...")
 
         clear_lcd(self.cad)
         toggle_cursor_line(self.cad, reset=True)
@@ -232,11 +292,18 @@ class StatusDriver:
         toggle_cursor_line(self.cad)
         self.cad.lcd.write("Do not unplug!")
 
-        run_shell("pihole -v")
-        # TODO: Run apt update
+        if apt_update:
+            run_shell("apt update")
+            run_shell("apt upgrade")
+
+        if pihole_update:
+            run_shell("pihole -up")
+
+        if dietpi_update:
+            run_shell("dietpi-update 1")
 
         print("Updates Complete!")
-        self.auto_update()
+        self.auto_update(load_last_page = True)
 
     def update(self):
         self.stats = pihole_stats()
@@ -244,26 +311,32 @@ class StatusDriver:
         self.memory = memory_usage_percent()
         self.temperature = current_temperature()
 
-        if pihole_update_available():
-            self.stats.status = "update!"
+        if any_updates_available():
+            self.stats.status = "updates!"
 
-    def auto_update(self):
+    def auto_update(self, load_last_page = False):
         if self._update_interval_min == 0:
             return
 
-        print("Auto Updating")
+        print("Auto updating display data")
         self.update()
+
+        if self._auto_rotate_page and not load_last_page:
+            self._current_render_page_index += 1
+
+            if self._current_render_page_index > 3:
+                self._current_render_page_index = 0
 
         self.update_timer = Timer(self._update_interval_min * 60, self.auto_update)
         self.update_timer.start()
 
-        if self.current_render_page_index == 0:
+        if self._current_render_page_index == 0:
             self.render_status_ip()
-        if self.current_render_page_index == 1:
+        if self._current_render_page_index == 1:
             self.render_uptime_memory_temp()
-        if self.current_render_page_index == 2:
+        if self._current_render_page_index == 2:
             self.render_blocked_info()
-        if self.current_render_page_index == 3:
+        if self._current_render_page_index == 3:
             self.render_client_info()
 
     def cancel_timers(self):
@@ -278,7 +351,7 @@ class StatusDriver:
         question = LCDQuestion(
             question="Update Interval?",
             answers=intervals,
-            selector="Minutes > ",
+            selector="Minutes >",
             cad=self.cad,
         )
 
@@ -287,15 +360,15 @@ class StatusDriver:
         self.auto_update()
 
     def toggle_backlight(self, event=None):
+        self._backlight_on = not self._backlight_on
+
         if self._backlight_on:
             self.cad.lcd.backlight_on()
         else:
             self.cad.lcd.backlight_off()
 
-        self._backlight_on = not self._backlight_on
-
     def render_status_ip(self, event=None):
-        self.current_render_page_index = 0
+        self._current_render_page_index = 0
 
         clear_lcd(self.cad)
         toggle_cursor_line(self.cad, reset=True)
@@ -307,7 +380,7 @@ class StatusDriver:
         self.cad.lcd.write(f":{self.stats.ip_address}")
 
     def render_uptime_memory_temp(self, event=None):
-        self.current_render_page_index = 1
+        self._current_render_page_index = 1
 
         clear_lcd(self.cad)
         toggle_cursor_line(self.cad, reset=True)
@@ -324,7 +397,7 @@ class StatusDriver:
         self.cad.lcd.write(self.temperature)
 
     def render_blocked_info(self, event=None):
-        self.current_render_page_index = 2
+        self._current_render_page_index = 2
 
         clear_lcd(self.cad)
         toggle_cursor_line(self.cad, reset=True)
@@ -337,7 +410,7 @@ class StatusDriver:
         self.cad.lcd.write(f"Sites:{self.stats.domains_blocked}")
 
     def render_client_info(self, event=None):
-        self.current_render_page_index = 3
+        self._current_render_page_index = 3
 
         clear_lcd(self.cad)
         toggle_cursor_line(self.cad, reset=True)
