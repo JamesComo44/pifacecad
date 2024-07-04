@@ -34,7 +34,6 @@ class LCDQuestion(object):
     :param cad: An already initialised PiFaceCAD object.
     :type cad: PiFaceCAD
     """
-
     def __init__(self, question, answers, selector=">", cad=None):
         self.question = question
         self.answers = answers
